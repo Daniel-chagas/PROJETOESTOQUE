@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+typedef struct produto {
+    int cod;
+    char nome[50];
+    float preco;
+    int qtd;
+    struct produto *ant;
+    struct produto *prox;
+} Produto;
+
+Produto *inicio = NULL;
+Produto *fim = NULL;
+int total_comparacoes = 0;
+int total_trocas = 0;
+
+
+void inserir(int cod, char nome[], float preco, int qtd) {
+    Produto *novo = (Produto*)malloc(sizeof(Produto));
+    novo->cod = cod;
+    strcpy(novo->nome, nome);
+    novo->preco = preco;
+    novo->qtd = qtd;
+    
+    if(inicio == NULL) {
+        inicio = novo;
+        fim = novo;
+        novo->ant = NULL;
+        novo->prox = NULL;
+    } else {
+        novo->prox = inicio;
+        inicio->ant = novo;
+        novo->ant = NULL;
+        inicio = novo;
+    }
+    printf("Produto %s adicionado!\n", nome);
+}
+
+void mostrar() {
+    Produto *atual = inicio;
+    while(atual != NULL) {
+        printf("Cod: %d | Nome: %s | R$ %.2f | Qtd: %d\n", 
+            atual->cod, atual->nome, atual->preco, atual->qtd);
+        atual = atual->prox;
+    }
+}
+
+
+Produto* buscar(int cod) {
+    Produto *atual = inicio;
+    Produto *anterior = NULL;
+    
+    while(atual != NULL) {
+        if(atual->cod == cod) {
+            if(anterior != NULL) { 
+                anterior->prox = atual->prox;
+                if(atual->prox != NULL)
+                    atual->prox->ant = anterior;
+                atual->prox = inicio;
+                inicio->ant = atual;
+                atual->ant = NULL;
+                inicio = atual;
+            }
+            return atual;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    }
+    return NULL;
+}
+
+
+void trocarNos(Produto *a, Produto *b) {
+    if (a == b) return;
+
+    Produto *a_ant = a->ant;
+    Produto *b_prox = b->prox;
+
+    if (a->prox != b) {
+        
+        Produto *b_ant = b->ant;
+        Produto *a_prox = a->prox;
+
+        if (a_ant) a_ant->prox = b;
+        else inicio = b;
+
+        if (b_prox) b_prox->ant = a;
+        else fim = a;
+
+        b->ant = a_ant;
+        b->prox = a_prox;
+        if (a_prox) a_prox->ant = b;
+
+        a->ant = b_ant;
+        a->prox = b_prox;
+        if (b_ant) b_ant->prox = a;
+    } else {
+        
+        if (a_ant) a_ant->prox = b;
+        else inicio = b;
+
+        if (b_prox) b_prox->ant = a;
+        else fim = a;
+
+        b->ant = a_ant;
+        a->prox = b_prox;
+
+        b->prox = a;
+        a->ant = b;
+    }
+}
+
+void ordenar() {
+    if (inicio == NULL) return;
+
+    int trocou;
+    Produto *ptr;
+    Produto *ultimo = NULL;
+
+    do {
+        trocou = 0;
+        ptr = inicio;
+
+        while (ptr->prox != ultimo) {
+            total_comparacoes++;
+            if (ptr->cod > ptr->prox->cod) {
+                trocarNos(ptr, ptr->prox);
+                trocou = 1;
+                total_trocas++;
+                
+                continue;
+            }
+            ptr = ptr->prox;
+        }
+        ultimo = ptr;
+    } while (trocou);
+}
+
+void atualizar_estoque(int cod, int qtd) {
+    Produto *p = buscar(cod);
+    if(p != NULL) {
+        p->qtd += qtd;
+        if(p->qtd <= 0) {
+            printf("Produto %s zerado! Removendo...\n", p->nome);
+            if(p->ant != NULL)
+                p->ant->prox = p->prox;
+            else
+                inicio = p->prox;
+            
+            if(p->prox != NULL)
+                p->prox->ant = p->ant;
+            else
+                fim = p->ant;
+            
+            free(p);
+        }
+    }
+}
