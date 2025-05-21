@@ -1,0 +1,17 @@
+void inserir(int cod, char nome[], float preco, int qtd) {
+    Produto *novo = (Produto*)malloc(sizeof(Produto));
+    novo->cod = cod;
+    strcpy(novo->nome, nome);
+    novo->preco = preco;
+    novo->qtd = qtd;
+    
+    if(inicio == NULL) {
+        inicio = novo;
+        fim = novo;
+        novo->ant = NULL;
+        novo->prox = NULL;
+    } else {
+        novo->prox = inicio;
+        inicio->ant = novo;
+        novo->ant = NULL;
+        inicio = novo;
