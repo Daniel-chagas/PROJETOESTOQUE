@@ -1,0 +1,32 @@
+void mostrar() {
+    Produto *atual = inicio;
+    while(atual != NULL) {
+        printf("Cod: %d | Nome: %s | R$ %.2f | Qtd: %d\n", 
+            atual->cod, atual->nome, atual->preco, atual->qtd);
+        atual = atual->prox;
+    }
+}
+
+
+Produto* buscar(int cod) {
+    Produto *atual = inicio;
+    Produto *anterior = NULL;
+    
+    while(atual != NULL) {
+        if(atual->cod == cod) {
+            if(anterior != NULL) { 
+                anterior->prox = atual->prox;
+                if(atual->prox != NULL)
+                    atual->prox->ant = anterior;
+                atual->prox = inicio;
+                inicio->ant = atual;
+                atual->ant = NULL;
+                inicio = atual;
+            }
+            return atual;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    }
+    return NULL;
+}
