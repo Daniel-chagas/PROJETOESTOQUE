@@ -1,0 +1,25 @@
+void ordenar() {
+    if (inicio == NULL) return;
+
+    int trocou;
+    Produto *ptr;
+    Produto *ultimo = NULL;
+
+    do {
+        trocou = 0;
+        ptr = inicio;
+
+        while (ptr->prox != ultimo) {
+            total_comparacoes++;
+            if (ptr->cod > ptr->prox->cod) {
+                trocarNos(ptr, ptr->prox);
+                trocou = 1;
+                total_trocas++;
+                
+                continue;
+            }
+            ptr = ptr->prox;
+        }
+        ultimo = ptr;
+    } while (trocou);
+}
