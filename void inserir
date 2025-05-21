@@ -15,3 +15,4 @@ void inserir(int cod, char nome[], float preco, int qtd) {
         inicio->ant = novo;
         novo->ant = NULL;
         inicio = novo;
+}
