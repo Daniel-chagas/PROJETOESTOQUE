@@ -18,8 +18,32 @@ int total_comparacoes = 0;
 int total_trocas = 0;
 
 
+
+Produto* buscar(int cod) {
+    Produto *atual = inicio;
+    while(atual != NULL) {
+        
+        if(atual->cod == cod) {
+            return atual;
+        }
+        atual = atual->prox;
+    }
+    return NULL;
+}
+
 void inserir(int cod, char nome[], float preco, int qtd) {
+    
+    if (buscar(cod) != NULL) {
+        printf("ERRO: Já existe um produto com o código %d. Operação de inserção cancelada.\n", cod);
+        return; 
+    }
+
+    
     Produto *novo = (Produto*)malloc(sizeof(Produto));
+    if (novo == NULL) {
+        printf("Erro ao alocar memória para o novo produto.\n");
+        return;
+    }
     novo->cod = cod;
     strcpy(novo->nome, nome);
     novo->preco = preco;
@@ -31,131 +55,294 @@ void inserir(int cod, char nome[], float preco, int qtd) {
         novo->ant = NULL;
         novo->prox = NULL;
     } else {
+       
         novo->prox = inicio;
         inicio->ant = novo;
         novo->ant = NULL;
         inicio = novo;
     }
-    printf("Produto %s adicionado!\n", nome);
+    printf("Produto '%s' (Cod: %d) adicionado com sucesso!\n", nome, cod);
 }
 
 void mostrar() {
+    if (inicio == NULL) {
+        printf("A lista de produtos está vazia.\n");
+        return;
+    }
+    printf("\n--- LISTA DE PRODUTOS ---\n");
     Produto *atual = inicio;
     while(atual != NULL) {
         printf("Cod: %d | Nome: %s | R$ %.2f | Qtd: %d\n", 
             atual->cod, atual->nome, atual->preco, atual->qtd);
         atual = atual->prox;
     }
+    printf("-------------------------\n");
 }
-
-
-Produto* buscar(int cod) {
-    Produto *atual = inicio;
-    Produto *anterior = NULL;
-    
-    while(atual != NULL) {
-        if(atual->cod == cod) {
-            if(anterior != NULL) { 
-                anterior->prox = atual->prox;
-                if(atual->prox != NULL)
-                    atual->prox->ant = anterior;
-                atual->prox = inicio;
-                inicio->ant = atual;
-                atual->ant = NULL;
-                inicio = atual;
-            }
-            return atual;
-        }
-        anterior = atual;
-        atual = atual->prox;
-    }
-    return NULL;
-}
-
 
 void trocarNos(Produto *a, Produto *b) {
     if (a == b) return;
 
     Produto *a_ant = a->ant;
+    Produto *a_prox = a->prox;
+    Produto *b_ant = b->ant;
     Produto *b_prox = b->prox;
 
-    if (a->prox != b) {
-        
-        Produto *b_ant = b->ant;
-        Produto *a_prox = a->prox;
+    
+    if (a_prox == b) {
+        if (a_ant) a_ant->prox = b; else inicio = b;
+        if (b_prox) b_prox->ant = a; else fim = a;
 
-        if (a_ant) a_ant->prox = b;
-        else inicio = b;
+        b->ant = a_ant;
+        a->prox = b_prox;
+        b->prox = a;
+        a->ant = b;
+    } 
+   
+    else {
+        if (a_ant) a_ant->prox = b; else inicio = b;
+        if (a_prox) a_prox->ant = b;
 
-        if (b_prox) b_prox->ant = a;
-        else fim = a;
+        if (b_ant) b_ant->prox = a; 
+        else inicio = a; 
+
+        if (b_prox) b_prox->ant = a; else fim = a;
 
         b->ant = a_ant;
         b->prox = a_prox;
-        if (a_prox) a_prox->ant = b;
-
         a->ant = b_ant;
         a->prox = b_prox;
-        if (b_ant) b_ant->prox = a;
-    } else {
-        
-        if (a_ant) a_ant->prox = b;
-        else inicio = b;
-
-        if (b_prox) b_prox->ant = a;
-        else fim = a;
-
-        b->ant = a_ant;
-        a->prox = b_prox;
-
-        b->prox = a;
-        a->ant = b;
     }
 }
 
-void ordenar() {
-    if (inicio == NULL) return;
+// função ordenar aceitando critério 
+void ordenar(int criterio) { // critérios: código, nome e preço
+    if (inicio == NULL || inicio->prox == NULL) {
+        printf("Não há produtos suficientes para ordenar.\n");
+        return;
+    }
+
+    printf("\n ORDENANDO PRODUTOS \n");
+    switch (criterio) {
+        case 1: printf("Critério: Código\n"); break;
+        case 2: printf("Critério: Nome\n"); break;
+        case 3: printf("Critério: Preço\n"); break;
+        default: printf("Critério inválido. Ordenando por Código (padrão).\n"); criterio = 1; break;
+    }
 
     int trocou;
     Produto *ptr;
-    Produto *ultimo = NULL;
+    Produto *ultimo_nao_ordenado = NULL;
+
+    total_comparacoes = 0; 
+    total_trocas = 0;      
 
     do {
         trocou = 0;
         ptr = inicio;
 
-        while (ptr->prox != ultimo) {
+        while (ptr != NULL && ptr->prox != ultimo_nao_ordenado) {
             total_comparacoes++;
-            if (ptr->cod > ptr->prox->cod) {
+            int condicao_troca = 0; 
+
+            
+            if (criterio == 1) { 
+                if (ptr->cod > ptr->prox->cod) {
+                    condicao_troca = 1;
+                }
+            } else if (criterio == 2) { 
+                
+                if (strcmp(ptr->nome, ptr->prox->nome) > 0) {
+                    condicao_troca = 1;
+                }
+            } else if (criterio == 3) { 
+                if (ptr->preco > ptr->prox->preco) {
+                    condicao_troca = 1;
+                }
+            }
+
+            if (condicao_troca) {
                 trocarNos(ptr, ptr->prox);
                 trocou = 1;
                 total_trocas++;
-                
-                continue;
+            } else {
+                ptr = ptr->prox; 
             }
-            ptr = ptr->prox;
         }
-        ultimo = ptr;
+        ultimo_nao_ordenado = ptr; 
     } while (trocou);
+
+    printf("Ordenação concluída.\n");
+    printf("Total de comparações durante a ordenação: %d\n", total_comparacoes);
+    printf("Total de trocas durante a ordenação: %d\n", total_trocas);
 }
 
-void atualizar_estoque(int cod, int qtd) {
+// Função auxiliar para remover um produto 
+void remover(Produto *p) {
+    if (p == NULL) return;
+
+    
+    if (p->ant != NULL) {
+        p->ant->prox = p->prox;
+    } else {
+        inicio = p->prox; 
+    }
+    
+    
+    if (p->prox != NULL) {
+        p->prox->ant = p->ant;
+    } else {
+        fim = p->ant; 
+    }
+    
+    free(p); 
+    printf("Produto removido com sucesso.\n");
+}
+
+void atualizar_estoque(int cod, int qtd_mudanca) {
     Produto *p = buscar(cod);
     if(p != NULL) {
-        p->qtd += qtd;
+        p->qtd += qtd_mudanca;
         if(p->qtd <= 0) {
-            printf("Produto %s zerado! Removendo...\n", p->nome);
-            if(p->ant != NULL)
-                p->ant->prox = p->prox;
-            else
-                inicio = p->prox;
-            
-            if(p->prox != NULL)
-                p->prox->ant = p->ant;
-            else
-                fim = p->ant;
-            
-            free(p);
+            printf("Produto '%s' (Cod: %d) zerado ou negativo! Removendo...\n", p->nome, p->cod);
+            remover(p); 
+        } else {
+            printf("Estoque do produto '%s' (Cod: %d) atualizado para: %d\n", p->nome, p->cod, p->qtd);
         }
+    } else {
+        printf("Produto com código %d não encontrado.\n", cod);
     }
+}
+
+
+void remover_produto() {
+    int cod_remover;
+    printf("\n--- REMOVER PRODUTO DO ESTOQUE ---\n");
+    printf("Digite o código do produto a ser removido: ");
+    scanf("%d", &cod_remover);
+    getchar(); 
+
+    Produto *produto_para_remover = buscar(cod_remover);
+    if (produto_para_remover != NULL) {
+        printf("Produto '%s' (Cod: %d) encontrado. Confirmar remoção? (s/n): ", 
+               produto_para_remover->nome, produto_para_remover->cod);
+        char confirmacao;
+        scanf(" %c", &confirmacao); 
+        if (confirmacao == 's' || confirmacao == 'S') {
+            remover(produto_para_remover);
+        } else {
+            printf("Remoção cancelada.\n");
+        }
+    } else {
+        printf("Produto com código %d não encontrado para remoção.\n", cod_remover);
+    }
+}
+
+
+// Menu 
+
+void exibir_menu() {
+    printf("\n--- MENU DE GERENCIAMENTO DE PRODUTOS ---\n");
+    printf("1. Inserir novo produto\n");
+    printf("2. Mostrar todos os produtos\n");
+    printf("3. Buscar produto por código\n");
+    printf("4. Atualizar estoque de produto (Adicionar/Remover quantidade)\n");
+    printf("5. Ordenar produtos\n"); 
+    printf("6. Remover produto completamente\n"); 
+    printf("0. Sair\n");
+    printf("------------------------------------------\n");
+    printf("Escolha uma opção: ");
+}
+
+int main() {
+    int opcao;
+    int cod, qtd_mudanca;
+    char nome[50];
+    float preco;
+    Produto *produto_encontrado;
+    int criterio_ordenacao; 
+
+    do {
+        exibir_menu();
+        scanf("%d", &opcao);
+        getchar(); 
+
+        switch (opcao) {
+            case 1:
+                printf("\n INSERIR NOVO PRODUTO \n");
+                printf("Digite o código do produto: ");
+                scanf("%d", &cod);
+                getchar(); // Consome o '\n'
+                printf("Digite o nome do produto: ");
+                fgets(nome, sizeof(nome), stdin);
+                nome[strcspn(nome, "\n")] = 0; 
+                printf("Digite o preço do produto: ");
+                scanf("%f", &preco);
+                printf("Digite a quantidade em estoque: ");
+                scanf("%d", &qtd_mudanca);
+                inserir(cod, nome, preco, qtd_mudanca);
+                break;
+            case 2:
+                mostrar();
+                break;
+            case 3:
+                printf("\n BUSCAR PRODUTO \n");
+                printf("Digite o código do produto a ser buscado: ");
+                scanf("%d", &cod);
+                total_comparacoes = 0; 
+                produto_encontrado = buscar(cod);
+                if (produto_encontrado != NULL) {
+                    printf("Produto encontrado: Cod: %d | Nome: %s | R$ %.2f | Qtd: %d\n",
+                           produto_encontrado->cod, produto_encontrado->nome, 
+                           produto_encontrado->preco, produto_encontrado->qtd);
+                    printf("Comparações realizadas nesta busca: %d\n", total_comparacoes);
+                } else {
+                    printf("Produto com código %d não encontrado.\n", cod);
+                    printf("Comparações realizadas nesta busca: %d\n", total_comparacoes);
+                }
+                break;
+            case 4:
+                printf("\n ATUALIZAR ESTOQUE \n");
+                printf("Digite o código do produto: ");
+                scanf("%d", &cod);
+                printf("Digite a quantidade de mudança (positiva para adicionar, negativa para remover): ");
+                scanf("%d", &qtd_mudanca);
+                atualizar_estoque(cod, qtd_mudanca);
+                break;
+            case 5:
+                printf("\n ESCOLHA O CRITÉRIO DE ORDENAÇÃO \n");
+                printf("1. Ordenar por Código\n");
+                printf("2. Ordenar por Nome\n");
+                printf("3. Ordenar por Preço\n");
+                printf("Escolha o critério (1, 2 ou 3): ");
+                scanf("%d", &criterio_ordenacao);
+                ordenar(criterio_ordenacao);
+                break;
+            case 6: 
+                remover_produto();
+                break;
+            case 0:
+                printf("Saindo do programa. Até mais!\n");
+                break;
+            default:
+                printf("Opção inválida. Por favor, digite um número entre 0 e 6.\n");
+                break;
+        }
+        printf("\nPressione ENTER para continuar...\n");
+        getchar(); 
+        while(getchar() != '\n'); 
+        
+    } while (opcao != 0);
+
+    
+    Produto *atual = inicio;
+    Produto *proximo_no;
+    while (atual != NULL) {
+        proximo_no = atual->prox;
+        free(atual);
+        atual = proximo_no;
+    }
+    inicio = NULL;
+    fim = NULL;
+
+    return 0;
 }
