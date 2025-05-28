@@ -216,7 +216,7 @@ void atualizar_estoque(int cod, int qtd_mudanca) {
 
 void remover_produto() {
     int cod_remover;
-    printf("\n--- REMOVER PRODUTO DO ESTOQUE ---\n");
+    printf("\n REMOVER PRODUTO DO ESTOQUE \n");
     printf("Digite o código do produto a ser removido: ");
     scanf("%d", &cod_remover);
     getchar(); 
@@ -241,7 +241,7 @@ void remover_produto() {
 // Menu 
 
 void exibir_menu() {
-    printf("\n--- MENU DE GERENCIAMENTO DE PRODUTOS ---\n");
+    printf("\n MENU DE GERENCIAMENTO DE PRODUTOS \n");
     printf("1. Inserir novo produto\n");
     printf("2. Mostrar todos os produtos\n");
     printf("3. Buscar produto por código\n");
@@ -249,7 +249,7 @@ void exibir_menu() {
     printf("5. Ordenar produtos\n"); 
     printf("6. Remover produto completamente\n"); 
     printf("0. Sair\n");
-    printf("------------------------------------------\n");
+    printf("-----------------------\n");
     printf("Escolha uma opção: ");
 }
 
