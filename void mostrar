@@ -8,25 +8,3 @@ void mostrar() {
 }
 
 
-Produto* buscar(int cod) {
-    Produto *atual = inicio;
-    Produto *anterior = NULL;
-    
-    while(atual != NULL) {
-        if(atual->cod == cod) {
-            if(anterior != NULL) { 
-                anterior->prox = atual->prox;
-                if(atual->prox != NULL)
-                    atual->prox->ant = anterior;
-                atual->prox = inicio;
-                inicio->ant = atual;
-                atual->ant = NULL;
-                inicio = atual;
-            }
-            return atual;
-        }
-        anterior = atual;
-        atual = atual->prox;
-    }
-    return NULL;
-}
