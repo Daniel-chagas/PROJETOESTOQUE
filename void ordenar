@@ -1,25 +1,13 @@
-void ordenar() {
-    if (inicio == NULL) return;
+void ordenar(int criterio) { // critérios: código, nome e preço
+    if (inicio == NULL || inicio->prox == NULL) {
+        printf("Não há produtos suficientes para ordenar.\n");
+        return;
+    }
 
-    int trocou;
-    Produto *ptr;
-    Produto *ultimo = NULL;
-
-    do {
-        trocou = 0;
-        ptr = inicio;
-
-        while (ptr->prox != ultimo) {
-            total_comparacoes++;
-            if (ptr->cod > ptr->prox->cod) {
-                trocarNos(ptr, ptr->prox);
-                trocou = 1;
-                total_trocas++;
-                
-                continue;
-            }
-            ptr = ptr->prox;
-        }
-        ultimo = ptr;
-    } while (trocou);
-}
+    printf("\n ORDENANDO PRODUTOS \n");
+    switch (criterio) {
+        case 1: printf("Critério: Código\n"); break;
+        case 2: printf("Critério: Nome\n"); break;
+        case 3: printf("Critério: Preço\n"); break;
+        default: printf("Critério inválido. Ordenando por Código (padrão).\n"); criterio = 1; break;
+    }
