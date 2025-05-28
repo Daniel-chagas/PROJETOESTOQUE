@@ -16,3 +16,17 @@ Produto *inicio = NULL;
 Produto *fim = NULL;
 int total_comparacoes = 0;
 int total_trocas = 0;
+
+
+
+Produto* buscar(int cod) {
+    Produto *atual = inicio;
+    while(atual != NULL) {
+        
+        if(atual->cod == cod) {
+            return atual;
+        }
+        atual = atual->prox;
+    }
+    return NULL;
+}
