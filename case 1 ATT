@@ -1,0 +1,37 @@
+case 1:
+{
+    char input[100];
+    printf("\n INSERIR NOVO PRODUTO \n");
+
+    printf("Digite o código do produto (ou 'v' para voltar): ");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = 0;
+    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+    if (sscanf(input, "%d", &cod) != 1) {
+        printf("Código inválido. Voltando ao menu.\n");
+        break;
+    }
+
+    printf("Digite o nome do produto (ou 'v' para voltar): ");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = 0;
+    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+    strcpy(nome, input);
+
+    printf("Digite o preço do produto (ou 'v' para voltar): ");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = 0;
+    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+    if (sscanf(input, "%f", &preco) != 1) {
+        printf("Preço inválido. Voltando ao menu.\n");
+        break;
+    }
+
+    printf("Digite a quantidade em estoque (ou 'v' para voltar): ");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = 0;
+    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+    if (sscanf(input, "%d", &qtd_mudanca) != 1) {
+        printf("Quantidade inválida. Voltando ao menu.\n");
+        break;
+    }
