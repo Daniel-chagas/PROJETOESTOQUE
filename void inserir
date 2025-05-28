@@ -1,5 +1,15 @@
 void inserir(int cod, char nome[], float preco, int qtd) {
+
+   if (buscar(cod) != NULL) {
+        printf("ERRO: Já existe um produto com o código %d. Operação de inserção cancelada.\n", cod);
+        return; 
+    }
+    
     Produto *novo = (Produto*)malloc(sizeof(Produto));
+    if (novo == NULL) {
+        printf("Erro ao alocar memória para o novo produto.\n");
+        return;
+    }
     novo->cod = cod;
     strcpy(novo->nome, nome);
     novo->preco = preco;
@@ -11,8 +21,14 @@ void inserir(int cod, char nome[], float preco, int qtd) {
         novo->ant = NULL;
         novo->prox = NULL;
     } else {
+       
         novo->prox = inicio;
         inicio->ant = novo;
         novo->ant = NULL;
         inicio = novo;
+    }
+    printf("Produto '%s' (Cod: %d) adicionado com sucesso!\n", nome, cod);
 }
+
+
+
