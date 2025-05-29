@@ -245,7 +245,7 @@ void remover_produto() {
     printf("\n REMOVER PRODUTO DO ESTOQUE \n");
     printf("Digite o código do produto a ser removido: ");
     scanf("%d", &cod_remover);
-    int c; while ((c = getchar()) != '\n' && c != EOF); // Limpa o buffer
+    int c; while ((c = getchar()) != '\n' && c != EOF); 
 
     Produto *produto_para_remover = buscar(1, &cod_remover); // Busca por código (critério 1)
     if (produto_para_remover != NULL) {
@@ -253,7 +253,7 @@ void remover_produto() {
                produto_para_remover->nome, produto_para_remover->cod);
         char confirmacao;
         scanf(" %c", &confirmacao);
-        while ((c = getchar()) != '\n' && c != EOF); // Limpa o buffer
+        while ((c = getchar()) != '\n' && c != EOF); 
         if (confirmacao == 's' || confirmacao == 'S') {
             remover(produto_para_remover);
         } else {
@@ -271,7 +271,7 @@ void exibir_menu() {
     printf("\n MENU DE GERENCIAMENTO DE PRODUTOS \n");
     printf("1. Inserir novo produto\n");
     printf("2. Mostrar todos os produtos\n");
-    printf("3. Buscar produto\n"); // Texto do menu atualizado
+    printf("3. Buscar produto\n"); 
     printf("4. Atualizar estoque de produto (Adicionar/Remover quantidade)\n");
     printf("5. Ordenar produtos\n");
     printf("6. Remover produto completamente\n");
@@ -401,10 +401,10 @@ int main() {
                 printf("\n ATUALIZAR ESTOQUE \n");
                 printf("Digite o código do produto: ");
                 scanf("%d", &cod);
-                while ((c = getchar()) != '\n' && c != EOF); // Limpa o buffer
+                while ((c = getchar()) != '\n' && c != EOF); 
                 printf("Digite a quantidade de mudança (positiva para adicionar, negativa para remover): ");
                 scanf("%d", &qtd_mudanca);
-                while ((c = getchar()) != '\n' && c != EOF); // Limpa o buffer
+                while ((c = getchar()) != '\n' && c != EOF); 
                 atualizar_estoque(cod, qtd_mudanca);
                 break;
 
@@ -415,7 +415,7 @@ int main() {
                 printf("3. Ordenar por Preço\n");
                 printf("Escolha o critério (1, 2 ou 3): ");
                 scanf("%d", &criterio_ordenacao);
-                while ((c = getchar()) != '\n' && c != EOF); // Limpa o buffer
+                while ((c = getchar()) != '\n' && c != EOF); 
                 ordenar(criterio_ordenacao);
                 break;
 
