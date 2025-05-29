@@ -2,38 +2,34 @@ void trocarNos(Produto *a, Produto *b) {
     if (a == b) return;
 
     Produto *a_ant = a->ant;
+    Produto *a_prox = a->prox;
+    Produto *b_ant = b->ant;
     Produto *b_prox = b->prox;
 
-    if (a->prox != b) {
-        
-        Produto *b_ant = b->ant;
-        Produto *a_prox = a->prox;
 
-        if (a_ant) a_ant->prox = b;
-        else inicio = b;
-
-        if (b_prox) b_prox->ant = a;
-        else fim = a;
-
-        b->ant = a_ant;
-        b->prox = a_prox;
-        if (a_prox) a_prox->ant = b;
-
-        a->ant = b_ant;
-        a->prox = b_prox;
-        if (b_ant) b_ant->prox = a;
-    } else {
-        
-        if (a_ant) a_ant->prox = b;
-        else inicio = b;
-
-        if (b_prox) b_prox->ant = a;
-        else fim = a;
+    if (a_prox == b) {
+        if (a_ant) a_ant->prox = b; else inicio = b;
+        if (b_prox) b_prox->ant = a; else fim = a;
 
         b->ant = a_ant;
         a->prox = b_prox;
-
         b->prox = a;
         a->ant = b;
     }
+
+    else {
+        if (a_ant) a_ant->prox = b; else inicio = b;
+        if (a_prox) a_prox->ant = b;
+
+        if (b_ant) b_ant->prox = a;
+        else inicio = a;
+
+        if (b_prox) b_prox->ant = a; else fim = a;
+
+        b->ant = a_ant;
+        b->prox = a_prox;
+        a->ant = b_ant;
+        a->prox = b_prox;
+    }
+    total_trocas++;
 }
