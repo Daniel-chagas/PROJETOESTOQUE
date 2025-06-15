@@ -2,51 +2,75 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <math.h> //  função fabs
+#include <math.h> //função fabs
+#include <locale.h>
+
+
+#define NOME_ARQUIVO "produtos.dat"
 
 typedef struct produto {
     int cod;
     char nome[50];
     float preco;
     int qtd;
-    struct produto *ant;
-    struct produto *prox;
+    struct produto *ant; 
+    struct produto *prox; 
 } Produto;
 
+
 Produto *inicio = NULL;
-Produto *fim = NULL;
+Produto *fim = NULL; 
+
+
 int total_comparacoes = 0;
 int total_trocas = 0;
 
 
 
-Produto* buscar(int criterio, void *valor_busca) {
+Produto* buscar(int criterio, const void *valor_busca);
+void inserir(int cod, const char nome[], float preco, int qtd); // ALTERADO: Adicionado 'const'
+void mostrar();
+void trocarNos(Produto *a, Produto *b);
+void ordenar(int criterio);
+void remover(Produto *p);
+void atualizar_estoque(int cod, int qtd_mudanca);
+void remover_produto();
+void exibir_menu();
+
+//PERSISTÊNCIA DE DADOS
+void salvar_dados();
+void carregar_dados();
+
+
+
+// Função de Busca
+Produto* buscar(int criterio, const void *valor_busca) {
     Produto *atual = inicio;
     total_comparacoes = 0;
 
     while (atual != NULL) {
         total_comparacoes++;
-
         int encontrado = 0;
 
         switch (criterio) {
-            case 1:
+            case 1: //Busca por Código
                 if (atual->cod == *(int*)valor_busca) {
                     encontrado = 1;
                 }
                 break;
-            case 2:
-                if (strcasecmp(atual->nome, (char*)valor_busca) == 0) { // strcasecmp para comparação sem case-sensitive
+            case 2: 
+            
+                if (strcasecmp(atual->nome, (const char*)valor_busca) == 0) {  //strcasecmp para comparação sem case-sensitive
                     encontrado = 1;
                 }
                 break;
-            case 3:
-                if (fabs(atual->preco - *(float*)valor_busca) < 0.001) { 
+            case 3: 
+                if (fabs(atual->preco - *(float*)valor_busca) < 0.001) {
                     encontrado = 1;
                 }
                 break;
             default:
-                return NULL;
+                return NULL; 
         }
 
         if (encontrado) {
@@ -54,41 +78,44 @@ Produto* buscar(int criterio, void *valor_busca) {
         }
         atual = atual->prox;
     }
-    return NULL;
+    return NULL; 
 }
 
-void inserir(int cod, char nome[], float preco, int qtd) {
+//Função inserir, importante para a persistência dos dados adicionados 
 
-    if (buscar(1, &cod) != NULL) { // Busca por código para evitar duplicidade
+void inserir(int cod, const char nome[], float preco, int qtd) {
+    if (buscar(1, &cod) != NULL) { //Verifica se já existe um produto com o mesmo código
         printf("ERRO: Já existe um produto com o código %d. Operação de inserção cancelada.\n", cod);
         return;
     }
 
-
-    Produto *novo = (Produto*)malloc(sizeof(Produto));
+    Produto *novo = (Produto*)malloc(sizeof(Produto)); // Aloca memória para o novo nó
     if (novo == NULL) {
         printf("Erro ao alocar memória para o novo produto.\n");
         return;
     }
+
+    //Preenche os dados do novo produto
     novo->cod = cod;
-    strcpy(novo->nome, nome);
+    strcpy(novo->nome, nome); 
     novo->preco = preco;
     novo->qtd = qtd;
+    novo->prox = NULL; 
 
-    if(inicio == NULL) {
+    if (inicio == NULL) {
+        
         inicio = novo;
         fim = novo;
-        novo->ant = NULL;
-        novo->prox = NULL;
+        novo->ant = NULL; 
     } else {
-
-        novo->prox = inicio;
-        inicio->ant = novo;
-        novo->ant = NULL;
-        inicio = novo;
+        
+        fim->prox = novo; 
+        novo->ant = fim;   
+        fim = novo;        
     }
     printf("Produto '%s' (Cod: %d) adicionado com sucesso!\n", nome, cod);
 }
+
 
 void mostrar() {
     if (inicio == NULL) {
@@ -105,44 +132,45 @@ void mostrar() {
     printf("-------------------------\n");
 }
 
-void trocarNos(Produto *a, Produto *b) {
-    if (a == b) return;
 
+void trocarNos(Produto *a, Produto *b) {
+    if (a == b) return; 
+
+    
     Produto *a_ant = a->ant;
     Produto *a_prox = a->prox;
     Produto *b_ant = b->ant;
     Produto *b_prox = b->prox;
 
-
+    
     if (a_prox == b) {
-        if (a_ant) a_ant->prox = b; else inicio = b;
-        if (b_prox) b_prox->ant = a; else fim = a;
+        if (a_ant) a_ant->prox = b; else inicio = b; 
+        if (b_prox) b_prox->ant = a; else fim = a; 
 
         b->ant = a_ant;
         a->prox = b_prox;
         b->prox = a;
         a->ant = b;
     }
-
+    
     else {
-        if (a_ant) a_ant->prox = b; else inicio = b;
-        if (a_prox) a_prox->ant = b;
+        if (a_ant) a_ant->prox = b; else inicio = b; 
+        if (a_prox) a_prox->ant = b; 
 
-        if (b_ant) b_ant->prox = a;
-        else inicio = a;
+        if (b_ant) b_ant->prox = a; 
+        if (b_prox) b_prox->ant = a; else fim = a; 
 
-        if (b_prox) b_prox->ant = a; else fim = a;
-
+       
         b->ant = a_ant;
         b->prox = a_prox;
         a->ant = b_ant;
         a->prox = b_prox;
     }
-    total_trocas++;
+    total_trocas++; 
 }
 
-// função ordenar aceitando critério
-void ordenar(int criterio) { // critérios: código, nome e preço
+//função para ordenar a lista de produtos (usando um Bubble Sort aceitando critério)
+void ordenar(int criterio) {
     if (inicio == NULL || inicio->prox == NULL) {
         printf("Não há produtos suficientes para ordenar.\n");
         return;
@@ -158,79 +186,84 @@ void ordenar(int criterio) { // critérios: código, nome e preço
 
     int trocou;
     Produto *ptr;
-    Produto *ultimo_nao_ordenado = NULL;
+    Produto *ultimo_nao_ordenado = NULL; 
 
     total_comparacoes = 0;
     total_trocas = 0;
 
     do {
         trocou = 0;
-        ptr = inicio;
+        ptr = inicio; 
 
+        
         while (ptr != NULL && ptr->prox != ultimo_nao_ordenado) {
             total_comparacoes++;
             int condicao_troca = 0;
 
-
-            if (criterio == 1) {
+            if (criterio == 1) { //Ordenar por Código
                 if (ptr->cod > ptr->prox->cod) {
                     condicao_troca = 1;
                 }
-            } else if (criterio == 2) {
-
-                if (strcmp(ptr->nome, ptr->prox->nome) > 0) {
+            } else if (criterio == 2) { //Ordenar por Nome
+                if (strcmp(ptr->nome, ptr->prox->nome) > 0) { 
                     condicao_troca = 1;
                 }
-            } else if (criterio == 3) {
+            } else if (criterio == 3) { //Ordenar por Preço
                 if (ptr->preco > ptr->prox->preco) {
                     condicao_troca = 1;
                 }
             }
 
             if (condicao_troca) {
+                
                 trocarNos(ptr, ptr->prox);
                 trocou = 1;
+                
+               
+                
             } else {
+                
                 ptr = ptr->prox;
             }
         }
-        ultimo_nao_ordenado = ptr;
-    } while (trocou);
+        ultimo_nao_ordenado = ptr; 
+    } while (trocou); 
 
     printf("Ordenação concluída.\n");
     printf("Total de comparações durante a ordenação: %d\n", total_comparacoes);
     printf("Total de trocas durante a ordenação: %d\n", total_trocas);
 }
 
-// Função auxiliar para remover um produto
+//Função auxiliar para remover um produto da lista
 void remover(Produto *p) {
-    if (p == NULL) return;
+    if (p == NULL) return; 
 
-
+    
     if (p->ant != NULL) {
         p->ant->prox = p->prox;
     } else {
-        inicio = p->prox;
+        inicio = p->prox; 
     }
 
-
+    
     if (p->prox != NULL) {
         p->prox->ant = p->ant;
     } else {
         fim = p->ant;
     }
 
-    free(p);
+    free(p); 
     printf("Produto removido com sucesso.\n");
 }
 
+//Função para atualizar a quantidade em estoque de um produto
 void atualizar_estoque(int cod, int qtd_mudanca) {
-    Produto *p = buscar(1, &cod); 
+    Produto *p = buscar(1, &cod); //Busca o produto pelo código
     if(p != NULL) {
-        p->qtd += qtd_mudanca;
+        p->qtd += qtd_mudanca; //Adiciona ou remove a quantidade
         if(p->qtd <= 0) {
             printf("Produto '%s' (Cod: %d) zerado ou negativo! Removendo...\n", p->nome, p->cod);
-            remover(p);
+            remover(p); //Se a quantidade for <= 0, remove o produto
         } else {
             printf("Estoque do produto '%s' (Cod: %d) atualizado para: %d\n", p->nome, p->cod, p->qtd);
         }
@@ -239,7 +272,7 @@ void atualizar_estoque(int cod, int qtd_mudanca) {
     }
 }
 
-
+//Função para remover um produto completamente 
 void remover_produto() {
     int cod_remover;
     printf("\n REMOVER PRODUTO DO ESTOQUE \n");
@@ -255,7 +288,7 @@ void remover_produto() {
         scanf(" %c", &confirmacao);
         while ((c = getchar()) != '\n' && c != EOF); 
         if (confirmacao == 's' || confirmacao == 'S') {
-            remover(produto_para_remover);
+            remover(produto_para_remover); //Chama a função de remoção
         } else {
             printf("Remoção cancelada.\n");
         }
@@ -264,23 +297,83 @@ void remover_produto() {
     }
 }
 
+//Função para salvar todos os produtos no arquivo
+void salvar_dados() {
+    FILE *arquivo = fopen(NOME_ARQUIVO, "wb"); 
+    if (arquivo == NULL) {
+        printf("ERRO: Não foi possível abrir o arquivo '%s' para salvar os dados.\n", NOME_ARQUIVO);
+        perror("Detalhes do erro"); 
+        return;
+    }
 
-// Menu
+    Produto *atual = inicio;
+    while (atual != NULL) {
+        //Escreve os dados de cada produto
+        fwrite(&atual->cod, sizeof(int), 1, arquivo);
+        fwrite(atual->nome, sizeof(char), 50, arquivo); // Escreve 50 bytes para o nome
+        fwrite(&atual->preco, sizeof(float), 1, arquivo);
+        fwrite(&atual->qtd, sizeof(int), 1, arquivo);
+        atual = atual->prox;
+    }
 
+    fclose(arquivo); 
+    printf("Dados salvos com sucesso em '%s'.\n", NOME_ARQUIVO);
+}
+
+//Função para carregar os dados do arquivo
+void carregar_dados() {
+    FILE *arquivo = fopen(NOME_ARQUIVO, "rb"); //("read binary")
+    if (arquivo == NULL) {
+        printf("Arquivo de dados '%s' não encontrado. Iniciando com lista vazia.\n", NOME_ARQUIVO);
+        
+        return;
+    }
+
+    //Antes de carregar novos dados, libera a memória de qualquer produto que esteja na lista
+    //Isso evita vazamentos de memória e garante que a lista seja reconstruída do zero
+    Produto *atual_memoria = inicio;
+    Produto *proximo_no_memoria;
+    while (atual_memoria != NULL) {
+        proximo_no_memoria = atual_memoria->prox;
+        free(atual_memoria); // Libera a memória do nó
+        atual_memoria = proximo_no_memoria;
+    }
+    inicio = NULL; 
+    fim = NULL;
+
+    //Lendo os dados do arquivo e reconstruindo a lista encadeada
+    Produto temp_prod; //Estrutura temporária para ler os dados do arquivo
+    //O loop continua enquanto 'fread' conseguir ler todos os 4 campos de um produto
+    while (fread(&temp_prod.cod, sizeof(int), 1, arquivo) == 1 &&
+           fread(temp_prod.nome, sizeof(char), 50, arquivo) == 50 && //CRÍTICO: fread do nome deve ler 50 bytes
+           fread(&temp_prod.preco, sizeof(float), 1, arquivo) == 1 &&
+           fread(&temp_prod.qtd, sizeof(int), 1, arquivo) == 1) {
+        // Para cada produto lido do arquivo, chame a função 'inserir'
+        // Isso vai alocar memória para um novo nó e adicioná-lo ao FINAL da lista
+        inserir(temp_prod.cod, temp_prod.nome, temp_prod.preco, temp_prod.qtd);
+    }
+
+    fclose(arquivo); 
+    printf("Dados carregados com sucesso de '%s'.\n", NOME_ARQUIVO);
+}
+
+//Função para exibir o menu de opções
 void exibir_menu() {
-    printf("\n MENU DE GERENCIAMENTO DE PRODUTOS \n");
+    printf("\n--- MENU DE GERENCIAMENTO DE PRODUTOS ---\n");
     printf("1. Inserir novo produto\n");
     printf("2. Mostrar todos os produtos\n");
-    printf("3. Buscar produto\n"); 
+    printf("3. Buscar produto\n");
     printf("4. Atualizar estoque de produto (Adicionar/Remover quantidade)\n");
     printf("5. Ordenar produtos\n");
     printf("6. Remover produto completamente\n");
     printf("0. Sair\n");
-    printf("-----------------------\n");
+    printf("-----------------------------------------\n");
     printf("Escolha uma opção: ");
 }
 
+//Função Principal
 int main() {
+	setlocale(LC_ALL, "Portuguese");
     int opcao;
     int cod;
     int qtd_mudanca;
@@ -288,143 +381,162 @@ int main() {
     float preco;
     Produto *produto_encontrado;
     int criterio_ordenacao;
-    int criterio_busca; // Variável para o critério de busca - opção 3
-    
-    inserir(101, "Arroz Branco 5kg", 15.50, 50);
-    inserir(205, "Feijao Preto 1kg", 8.99, 120);
-    inserir(310, "Acucar Refinado 1kg", 6.25, 80);
-    inserir(400, "Oleo de Soja 900ml", 7.10, 60);
-    inserir(150, "Cafe Torrado 500g", 12.00, 45);
-    printf("\nProdutos de teste inseridos diretamente.\n");
-   
+    int criterio_busca; //Variável para o critério de busca - opção 3
 
+    
+    //carregar os dados salvos anteriormente
+    carregar_dados();
+
+    
+    if (inicio == NULL) {
+        printf("\nNenhum dado encontrado no arquivo. Inserindo dados de teste para a primeira execução.\n");
+        inserir(101, "Arroz Branco 5kg", 15.50, 50);
+        inserir(205, "Feijao Preto 1kg", 8.99, 120);
+        inserir(310, "Acucar Refinado 1kg", 6.25, 80);
+        inserir(400, "Oleo de Soja 900ml", 7.10, 60);
+        inserir(150, "Cafe Torrado 500g", 12.00, 45);
+        salvar_dados(); // Salva os dados de teste imediatamente
+        printf("Produtos de teste inseridos e salvos para a proxima execucao.\n");
+    }
+
+    //Loop principal do menu
     do {
         exibir_menu();
         scanf("%d", &opcao);
         int c;
-        while ((c = getchar()) != '\n' && c != EOF); // Limpa o buffer após scanf para 'opcao'
-
+        //Limpa o buffer de entrada após scanf (para lidar com o '\n' pendente)
+        while ((c = getchar()) != '\n' && c != EOF);
 
         switch (opcao) {
-            case 1:
-                char input[100];
-                printf("\n INSERIR NOVO PRODUTO \n");
+            case 1: // Inserir novo produto
+                { // Bloco para permitir declaração de variáveis dentro do case
+                    char input[100]; 
 
-                printf("Digite o código do produto (ou 'v' para voltar): ");
-                fgets(input, sizeof(input), stdin);
-                input[strcspn(input, "\n")] = 0;
-                if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
-                if (sscanf(input, "%d", &cod) != 1) {
-                    printf("Código inválido. Voltando ao menu.\n");
-                    break;
+                    printf("\n INSERIR NOVO PRODUTO \n");
+
+                    printf("Digite o código do produto (ou 'v' para voltar): ");
+                    fgets(input, sizeof(input), stdin);
+                    input[strcspn(input, "\n")] = 0; // Remove o '\n' lido por fgets
+                    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+                    if (sscanf(input, "%d", &cod) != 1) {
+                        printf("Código inválido. Voltando ao menu.\n");
+                        break;
+                    }
+
+                    printf("Digite o nome do produto (ou 'v' para voltar): ");
+                    fgets(input, sizeof(input), stdin);
+                    input[strcspn(input, "\n")] = 0;
+                    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+                    strcpy(nome, input); 
+
+                    printf("Digite o preço do produto (ou 'v' para voltar): ");
+                    fgets(input, sizeof(input), stdin);
+                    input[strcspn(input, "\n")] = 0;
+                    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+                    if (sscanf(input, "%f", &preco) != 1) {
+                        printf("Preço inválido. Voltando ao menu.\n");
+                        break;
+                    }
+
+                    printf("Digite a quantidade em estoque (ou 'v' para voltar): ");
+                    fgets(input, sizeof(input), stdin);
+                    input[strcspn(input, "\n")] = 0;
+                    if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
+                    if (sscanf(input, "%d", &qtd_mudanca) != 1) {
+                        printf("Quantidade inválida. Voltando ao menu.\n");
+                        break;
+                    }
+                    inserir(cod, nome, preco, qtd_mudanca);
+                    salvar_dados(); //<SALVA AQUI: Após cada inserção
                 }
-
-                printf("Digite o nome do produto (ou 'v' para voltar): ");
-                fgets(input, sizeof(input), stdin);
-                input[strcspn(input, "\n")] = 0;
-                if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
-                strcpy(nome, input);
-
-                printf("Digite o preço do produto (ou 'v' para voltar): ");
-                fgets(input, sizeof(input), stdin);
-                input[strcspn(input, "\n")] = 0;
-                if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
-                if (sscanf(input, "%f", &preco) != 1) {
-                    printf("Preço inválido. Voltando ao menu.\n");
-                    break;
-                }
-
-                printf("Digite a quantidade em estoque (ou 'v' para voltar): ");
-                fgets(input, sizeof(input), stdin);
-                input[strcspn(input, "\n")] = 0;
-                if (strcmp(input, "v") == 0 || strcmp(input, "V") == 0) break;
-                if (sscanf(input, "%d", &qtd_mudanca) != 1) {
-                    printf("Quantidade inválida. Voltando ao menu.\n");
-                    break;
-                }
-                inserir(cod, nome, preco, qtd_mudanca);
                 break;
 
-            case 2:
+            case 2: 
                 mostrar();
                 break;
 
             case 3: 
-                printf("\n BUSCAR PRODUTO POR CRITÉRIO \n");
-                printf("1. Buscar por Código\n");
-                printf("2. Buscar por Nome\n");
-                printf("3. Buscar por Preço\n");
-                printf("Escolha o critério de busca (1, 2 ou 3): ");
-                scanf("%d", &criterio_busca);
-                while ((c = getchar()) != '\n' && c != EOF); 
+                {
+                    printf("\n BUSCAR PRODUTO POR CRITÉRIO \n");
+                    printf("1. Buscar por Código\n");
+                    printf("2. Buscar por Nome\n");
+                    printf("3. Buscar por Preço\n");
+                    printf("Escolha o critério de busca (1, 2 ou 3): ");
+                    scanf("%d", &criterio_busca);
+                    while ((c = getchar()) != '\n' && c != EOF);
 
-                int cod_busca;
-                char nome_busca[50];
-                float preco_busca;
+                    int cod_busca;
+                    char nome_busca[50];
+                    float preco_busca;
 
-                switch (criterio_busca) {
-                    case 1:
-                        printf("Digite o código a ser buscado: ");
-                        scanf("%d", &cod_busca);
-                        while ((c = getchar()) != '\n' && c != EOF); 
-                        produto_encontrado = buscar(1, &cod_busca);
-                        break;
-                    case 2:
-                        printf("Digite o nome a ser buscado: ");
-                        fgets(nome_busca, sizeof(nome_busca), stdin);
-                        nome_busca[strcspn(nome_busca, "\n")] = 0;
-                        produto_encontrado = buscar(2, nome_busca);
-                        break;
-                    case 3:
-                        printf("Digite o preço a ser buscado: ");
-                        scanf("%f", &preco_busca);
-                        while ((c = getchar()) != '\n' && c != EOF); 
-                        produto_encontrado = buscar(3, &preco_busca);
-                        break;
-                    default:
-                        printf("Critério de busca inválido.\n");
-                        produto_encontrado = NULL;
-                        break;
+                    switch (criterio_busca) {
+                        case 1:
+                            printf("Digite o código a ser buscado: ");
+                            scanf("%d", &cod_busca);
+                            while ((c = getchar()) != '\n' && c != EOF);
+                            produto_encontrado = buscar(1, &cod_busca);
+                            break;
+                        case 2:
+                            printf("Digite o nome a ser buscado: ");
+                            fgets(nome_busca, sizeof(nome_busca), stdin);
+                            nome_busca[strcspn(nome_busca, "\n")] = 0;
+                            produto_encontrado = buscar(2, nome_busca);
+                            break;
+                        case 3:
+                            printf("Digite o preço a ser buscado: ");
+                            scanf("%f", &preco_busca);
+                            while ((c = getchar()) != '\n' && c != EOF);
+                            produto_encontrado = buscar(3, &preco_busca);
+                            break;
+                        default:
+                            printf("Critério de busca inválido.\n");
+                            produto_encontrado = NULL;
+                            break;
+                    }
+
+                    if (produto_encontrado != NULL) {
+                        printf("\nProduto encontrado: Cod: %d | Nome: %s | R$ %.2f | Qtd: %d\n",
+                               produto_encontrado->cod, produto_encontrado->nome,
+                               produto_encontrado->preco, produto_encontrado->qtd);
+                    } else if (criterio_busca >= 1 && criterio_busca <= 3){
+                        printf("\nProduto não encontrado com o critério especificado.\n");
+                    }
+                    printf("Comparações realizadas nesta busca: %d\n", total_comparacoes);
                 }
-
-                if (produto_encontrado != NULL) {
-                    printf("\nProduto encontrado: Cod: %d | Nome: %s | R$ %.2f | Qtd: %d\n",
-                           produto_encontrado->cod, produto_encontrado->nome,
-                           produto_encontrado->preco, produto_encontrado->qtd);
-                } else if (criterio_busca >= 1 && criterio_busca <= 3){
-                    printf("\nProduto não encontrado com o critério especificado.\n");
-                }
-                printf("Comparações realizadas nesta busca: %d\n", total_comparacoes);
                 break;
 
-            case 4:
+            case 4: 
                 printf("\n ATUALIZAR ESTOQUE \n");
                 printf("Digite o código do produto: ");
                 scanf("%d", &cod);
-                while ((c = getchar()) != '\n' && c != EOF); 
+                while ((c = getchar()) != '\n' && c != EOF);
                 printf("Digite a quantidade de mudança (positiva para adicionar, negativa para remover): ");
                 scanf("%d", &qtd_mudanca);
-                while ((c = getchar()) != '\n' && c != EOF); 
+                while ((c = getchar()) != '\n' && c != EOF);
                 atualizar_estoque(cod, qtd_mudanca);
+                salvar_dados(); //<SALVA AQUI: Após uma atualização de estoque
                 break;
 
-            case 5:
+            case 5: // Ordenar produtos
                 printf("\n ESCOLHA O CRITÉRIO DE ORDENAÇÃO \n");
                 printf("1. Ordenar por Código\n");
                 printf("2. Ordenar por Nome\n");
                 printf("3. Ordenar por Preço\n");
                 printf("Escolha o critério (1, 2 ou 3): ");
                 scanf("%d", &criterio_ordenacao);
-                while ((c = getchar()) != '\n' && c != EOF); 
+                while ((c = getchar()) != '\n' && c != EOF);
                 ordenar(criterio_ordenacao);
+                salvar_dados(); //<SALVA AQUI: A ordem da lista mudou
                 break;
 
-            case 6:
+            case 6: 
                 remover_produto();
+                salvar_dados(); 
                 break;
 
-            case 0:
-                printf("Saindo do programa. Até mais!\n");
+            case 0: 
+                printf("Saindo do programa. Salvando dados finais...\n");
+                salvar_dados(); //<SALVA AQUI: Uma última vez antes de sair
                 break;
 
             default:
@@ -435,7 +547,7 @@ int main() {
         getchar(); 
     } while (opcao != 0);
 
-
+    
     Produto *atual = inicio;
     Produto *proximo_no;
     while (atual != NULL) {
@@ -443,7 +555,7 @@ int main() {
         free(atual);
         atual = proximo_no;
     }
-    inicio = NULL;
+    inicio = NULL; 
     fim = NULL;
 
     return 0;
