@@ -4,8 +4,6 @@
 #include <time.h>
 #include <math.h> //função fabs
 #include <locale.h>
-
-
 #define NOME_ARQUIVO "produtos.dat"
 
 typedef struct produto {
