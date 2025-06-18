@@ -26,7 +26,7 @@ int total_trocas = 0;
 
 
 Produto* buscar(int criterio, const void *valor_busca);
-void inserir(int cod, const char nome[], float preco, int qtd); // ALTERADO: Adicionado 'const'
+void inserir(int cod, const char nome[], float preco, int qtd); 
 void mostrar();
 void trocarNos(Produto *a, Produto *b);
 void ordenar(int criterio);
